@@ -47,7 +47,7 @@ Total time: 55-70 minutes
 ## Phase 1: Initialize
 
 ```bash
-# Start APX development servers
+# Start APX development server
 mcp-cli call apx/start '{}'
 mcp-cli call apx/status '{}'
 ```
@@ -146,6 +146,7 @@ Manually verify in browser:
 - Detail page shows complete info
 - Mutations work (update, delete)
 - Loading states work (skeletons)
+- Browser console errors are automatically captured in APX dev logs
 
 ## Phase 5: Deployment & Monitoring
 
@@ -155,7 +156,21 @@ Use DABs to deploy your APX application to Databricks. See the `dabs-writer` ski
 
 ### Monitor Application Logs
 
-**View deployed app logs:**
+**Automated log checking with APX MCP:**
+
+The APX MCP server can automatically check deployed application logs. Simply ask:
+"Please check the deployed app logs for <app-name>"
+
+
+The APX MCP will retrieve logs and identify issues automatically, including:
+- Deployment status and errors
+- Runtime exceptions and stack traces
+- Both `[SYSTEM]` (deployment) and `[APP]` (application) logs
+- Browser console errors (now included in APX dev logs)
+
+**Manual log checking (reference):**
+
+For direct CLI access:
 ```bash
 databricks apps logs <app-name> --profile <profile-name>
 ```
@@ -164,9 +179,6 @@ databricks apps logs <app-name> --profile <profile-name>
 - ✅ `Deployment successful` - App deployed correctly
 - ✅ `App started successfully` - Application is running
 - ❌ `Error:` - Check stack traces for issues
-- 📝 Check both `[SYSTEM]` (deployment) and `[APP]` (application output) logs
-
-**First step when troubleshooting deployed apps: Check the logs!**
 
 ## Phase 6: Documentation
 
@@ -214,7 +226,7 @@ Create two markdown files:
 
 ## Common Issues
 
-**Deployed app not working**: First check logs with `databricks apps logs <app-name>` to see deployment and runtime errors
+**Deployed app not working**: Ask to check deployed app logs (APX MCP will automatically retrieve and analyze them) or manually use `databricks apps logs <app-name>`
 **Python type errors**: Use explicit casting for dict access, check Optional fields
 **TypeScript errors**: Wait for OpenAPI regen, verify hook names match operation_ids
 **OpenAPI not updating**: Check watcher status with `apx dev status`, restart if needed
