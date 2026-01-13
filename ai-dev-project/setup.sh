@@ -7,9 +7,10 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SKILLS_DIR="../databricks-skills"
-MCP_SERVER_DIR="../databricks-mcp-server"
-TOOLS_CORE_DIR="../databricks-tools-core"
+BASE_DIR="$(dirname "$SCRIPT_DIR")"
+SKILLS_DIR="$BASE_DIR/databricks-skills"
+MCP_SERVER_DIR="$BASE_DIR/databricks-mcp-server"
+TOOLS_CORE_DIR="$BASE_DIR/databricks-tools-core"
 
 echo "=========================================="
 echo "Setting up Databricks Claude Test Project"
@@ -104,7 +105,7 @@ cd "$SCRIPT_DIR"
 MCP_DEV_CONFIG=$(cat <<EOF
 {
   "mcpServers": {
-    "databricks-dev": {
+    "databricks": {
       "command": "$MCP_SERVER_ABS/.venv/bin/python",
       "args": ["$MCP_SERVER_ABS/run_server.py"]
     }

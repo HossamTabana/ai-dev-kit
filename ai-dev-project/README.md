@@ -1,11 +1,12 @@
-# Databricks Claude Code / Cursor Starter Project
+# Databricks AI Dev Project (Starter Project / Template)
 
-A blank project for testing Claude Code or Cursor with Databricks AI Dev Kit. Use this as a template to create a new AI coding project focused on Databricks. It can also be used to experiment with the skils, MCP server integration, and test tools before using them in a real project.
+A template for creating a new project configured with Databricks AI Dev Kit for Claude Code or Cursor. Use this as a template to create a new AI coding project focused on Databricks. It can also be used to experiment with the skils, MCP server integration, and test tools before using them in a real project.
 
 ## Prerequisites
 
 - [uv](https://github.com/astral-sh/uv) - Python package manager
-- [Claude Code](https://claude.ai/code) - CLI tool
+- [Databricks CLI](https://docs.databricks.com/aws/en/dev-tools/cli/) - Command line interface for Databricks
+- [Claude Code](https://claude.ai/code) or [Cursor](https://cursor.com) - AI Coding environment
 
 ## Quick Start
 
