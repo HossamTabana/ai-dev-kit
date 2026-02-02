@@ -109,43 +109,6 @@ def uc_test_table(
     # Cleanup handled by schema drop
 
 
-@pytest.fixture(scope="module")
-def uc_test_table_for_clone(
-    test_catalog: str,
-    uc_test_schema: str,
-    warehouse_id: str,
-) -> str:
-    """
-    Create a source table for clone tests.
-
-    Returns the full table name.
-    """
-    table_name = f"{UC_TEST_PREFIX}_clone_source"
-    full_name = f"{test_catalog}.{uc_test_schema}.{table_name}"
-
-    logger.info(f"Creating clone source table: {full_name}")
-    execute_sql(
-        sql_query=f"""
-            CREATE OR REPLACE TABLE {full_name} (
-                id BIGINT,
-                value STRING
-            )
-        """,
-        warehouse_id=warehouse_id,
-    )
-
-    execute_sql(
-        sql_query=f"""
-            INSERT INTO {full_name} VALUES
-            (1, 'alpha'), (2, 'beta'), (3, 'gamma')
-        """,
-        warehouse_id=warehouse_id,
-    )
-
-    logger.info(f"Clone source table created: {full_name}")
-    yield full_name
-
-
 @pytest.fixture(scope="function")
 def unique_name() -> str:
     """Generate a unique name suffix for test resources."""
