@@ -533,16 +533,7 @@ async def get_conversation_executions(
             detail=f'Project {project_id} not found'
         )
 
-    # Get executions from database
-    exec_storage = ExecutionStorage(user_email, project_id, conversation_id)
-
-    # Get active execution (if any)
-    active = await exec_storage.get_active()
-
-    # Get recent executions
-    recent = await exec_storage.get_recent(limit=5)
-
-    # Also check in-memory streams for this conversation
+    # First check in-memory streams for this conversation (always works)
     stream_manager = get_stream_manager()
     in_memory_active = None
     async with stream_manager._lock:
@@ -562,6 +553,18 @@ async def get_conversation_executions(
                     'created_at': None,
                 }
                 break
+
+    # Try to get executions from database (may fail if table doesn't exist yet)
+    active = None
+    recent = []
+    try:
+        exec_storage = ExecutionStorage(user_email, project_id, conversation_id)
+        active = await exec_storage.get_active()
+        recent = await exec_storage.get_recent(limit=5)
+    except Exception as e:
+        # Table might not exist yet (migration pending) - log and continue
+        # In-memory streams will still work
+        logger.warning(f'Failed to query executions table (may not exist yet): {e}')
 
     return {
         'active': (

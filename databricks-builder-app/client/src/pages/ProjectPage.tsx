@@ -24,9 +24,11 @@ import {
   fetchClusters,
   fetchConversation,
   fetchConversations,
+  fetchExecutions,
   fetchProject,
   fetchWarehouses,
   invokeAgent,
+  reconnectToExecution,
 } from '@/lib/api';
 import type { Cluster, Conversation, Message, Project, Warehouse, TodoItem } from '@/lib/types';
 import { cn } from '@/lib/utils';
@@ -107,6 +109,8 @@ export default function ProjectPage() {
   const [defaultSchema, setDefaultSchema] = useState<string>('');
   const [workspaceFolder, setWorkspaceFolder] = useState<string>('');
   const [skillsExplorerOpen, setSkillsExplorerOpen] = useState(false);
+  const [activeExecutionId, setActiveExecutionId] = useState<string | null>(null);
+  const [isReconnecting, setIsReconnecting] = useState(false);
 
   // Calculate default schema from user email + project name once available
   const userDefaultSchema = useMemo(() => toSchemaName(user, project?.name ?? null), [user, project?.name]);
@@ -117,6 +121,7 @@ export default function ProjectPage() {
   const abortControllerRef = useRef<AbortController | null>(null);
   const clusterDropdownRef = useRef<HTMLDivElement>(null);
   const warehouseDropdownRef = useRef<HTMLDivElement>(null);
+  const reconnectAttemptedRef = useRef<string | null>(null); // Track which conversation we've checked
 
   // Load project and conversations
   useEffect(() => {
@@ -185,6 +190,108 @@ export default function ProjectPage() {
     loadData();
   }, [projectId, navigate]);
 
+  // Check for active execution when conversation loads and reconnect if needed
+  useEffect(() => {
+    if (!projectId || !currentConversation?.id || isLoading || isStreaming) return;
+
+    // Skip if we've already checked this conversation
+    if (reconnectAttemptedRef.current === currentConversation.id) return;
+    reconnectAttemptedRef.current = currentConversation.id;
+
+    const checkAndReconnect = async () => {
+      try {
+        const { active } = await fetchExecutions(projectId, currentConversation.id);
+
+        if (active && active.status === 'running') {
+          console.log('[RECONNECT] Found active execution:', active.id);
+          setIsReconnecting(true);
+          setIsStreaming(true);
+          setActiveExecutionId(active.id);
+
+          // Create abort controller for reconnection
+          abortControllerRef.current = new AbortController();
+
+          let fullText = '';
+
+          await reconnectToExecution({
+            executionId: active.id,
+            storedEvents: active.events,
+            signal: abortControllerRef.current.signal,
+            onEvent: (event) => {
+              const type = event.type as string;
+
+              if (type === 'text_delta') {
+                const text = event.text as string;
+                fullText += text;
+                setStreamingText(fullText);
+              } else if (type === 'text') {
+                const text = event.text as string;
+                if (text) {
+                  if (fullText && !fullText.endsWith('\n') && !text.startsWith('\n')) {
+                    fullText += '\n\n';
+                  }
+                  fullText += text;
+                  setStreamingText(fullText);
+                }
+              } else if (type === 'tool_use') {
+                setActivityItems((prev) => [
+                  ...prev,
+                  {
+                    id: event.tool_id as string,
+                    type: 'tool_use',
+                    content: '',
+                    toolName: event.tool_name as string,
+                    toolInput: event.tool_input as Record<string, unknown>,
+                    timestamp: Date.now(),
+                  },
+                ]);
+              } else if (type === 'tool_result') {
+                setActivityItems((prev) => [
+                  ...prev,
+                  {
+                    id: `result-${event.tool_use_id}`,
+                    type: 'tool_result',
+                    content: typeof event.content === 'string' ? event.content : JSON.stringify(event.content),
+                    isError: event.is_error as boolean,
+                    timestamp: Date.now(),
+                  },
+                ]);
+              } else if (type === 'todos') {
+                const todoItems = event.todos as TodoItem[];
+                if (todoItems) {
+                  setTodos(todoItems);
+                }
+              } else if (type === 'error') {
+                toast.error(event.error as string, { duration: 8000 });
+              }
+            },
+            onError: (error) => {
+              console.error('Reconnect error:', error);
+              toast.error('Failed to reconnect to execution');
+            },
+            onDone: async () => {
+              // Reload conversation to get the final messages from DB
+              const conv = await fetchConversation(projectId, currentConversation.id);
+              setCurrentConversation(conv);
+              setMessages(conv.messages || []);
+              setStreamingText('');
+              setIsStreaming(false);
+              setIsReconnecting(false);
+              setActiveExecutionId(null);
+              setActivityItems([]);
+              setTodos([]);
+            },
+          });
+        }
+      } catch (error) {
+        console.error('Failed to check for active executions:', error);
+        // Don't show error toast - this is a background check
+      }
+    };
+
+    checkAndReconnect();
+  }, [projectId, currentConversation?.id, isLoading]);
+
   // Scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -222,6 +329,9 @@ export default function ProjectPage() {
   // Select a conversation
   const handleSelectConversation = async (conversationId: string) => {
     if (!projectId || currentConversation?.id === conversationId) return;
+
+    // Reset reconnect tracking for the new conversation
+    reconnectAttemptedRef.current = null;
 
     try {
       const conv = await fetchConversation(projectId, conversationId);
@@ -826,7 +936,14 @@ export default function ProjectPage() {
               {/* Fun loader with progress - shown while streaming before text arrives */}
               {isStreaming && !streamingText && (
                 <div className="flex justify-start">
-                  <FunLoader todos={todos} className="py-2" />
+                  {isReconnecting ? (
+                    <div className="flex items-center gap-2 text-sm text-[var(--color-text-muted)] py-2">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>Reconnecting to agent...</span>
+                    </div>
+                  ) : (
+                    <FunLoader todos={todos} className="py-2" />
+                  )}
                 </div>
               )}
 
