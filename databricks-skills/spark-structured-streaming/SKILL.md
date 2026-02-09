@@ -63,7 +63,6 @@ df.writeStream \
 |-------|-------------|-----------|
 | **Monitoring** | Observability, metrics, Spark UI | See [monitoring-observability.md](monitoring-observability.md) |
 | **Error Handling** | Recovery patterns, dead letter queues | See [error-handling-recovery.md](error-handling-recovery.md) |
-| **Backfill** | Reprocessing historical data | See [backfill-patterns.md](backfill-patterns.md) |
 | **Late Data** | Handling late-arriving events | See [late-data-handling.md](late-data-handling.md) |
 
 ## Ingestion
@@ -71,13 +70,6 @@ df.writeStream \
 | Topic | Description | Reference |
 |-------|-------------|-----------|
 | **Auto Loader** | Schema evolution, file ingestion | See [auto-loader-schema-drift.md](auto-loader-schema-drift.md) |
-| **DLT vs Jobs** | Choosing between DLT and Databricks Jobs | See [dlt-vs-jobs.md](dlt-vs-jobs.md) |
-
-## Governance
-
-| Topic | Description | Reference |
-|-------|-------------|-----------|
-| **Unity Catalog** | UC integration, volumes, access control | See [unity-catalog-streaming.md](unity-catalog-streaming.md) |
 
 ## Best Practices
 
