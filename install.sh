@@ -40,7 +40,7 @@ USER_TOOLS=""
 USER_MCP_PATH=""
 
 # Databricks skills (bundled in repo)
-SKILLS="agent-bricks aibi-dashboards asset-bundles databricks-app-apx databricks-app-python databricks-config databricks-docs databricks-genie databricks-jobs databricks-python-sdk databricks-unity-catalog lakebase-provisioned model-serving spark-declarative-pipelines synthetic-data-generation unstructured-pdf-generation"
+SKILLS="agent-bricks aibi-dashboards asset-bundles databricks-app-apx databricks-app-python databricks-config databricks-docs databricks-genie databricks-jobs databricks-python-sdk databricks-unity-catalog lakebase-provisioned mlflow-evaluation model-serving spark-declarative-pipelines spark-structured-streaming synthetic-data-generation unstructured-pdf-generation vector-search"
 
 # MLflow skills (fetched from mlflow/skills repo)
 MLFLOW_SKILLS="agent-evaluation analyze-mlflow-chat-session analyze-mlflow-trace instrumenting-with-mlflow-tracing mlflow-onboarding querying-mlflow-metrics retrieving-mlflow-traces searching-mlflow-docs"

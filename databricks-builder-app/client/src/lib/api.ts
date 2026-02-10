@@ -316,6 +316,7 @@ export interface FetchSystemPromptParams {
   defaultCatalog?: string | null;
   defaultSchema?: string | null;
   workspaceFolder?: string | null;
+  projectId?: string | null;
 }
 
 export async function fetchSkillsTree(projectId: string): Promise<SkillTreeNode[]> {
@@ -342,8 +343,25 @@ export async function fetchSystemPrompt(params: FetchSystemPromptParams): Promis
   if (params.defaultCatalog != null) q.set('default_catalog', params.defaultCatalog);
   if (params.defaultSchema != null) q.set('default_schema', params.defaultSchema);
   if (params.workspaceFolder != null) q.set('workspace_folder', params.workspaceFolder);
-  const data = await request<{ system_prompt: string }>(`/system_prompt?${q.toString()}`);
+  if (params.projectId != null) q.set('project_id', params.projectId);
+  const data = await request<{ system_prompt: string }>(`/config/system_prompt?${q.toString()}`);
   return data.system_prompt ?? '';
+}
+
+export async function fetchAvailableSkills(
+  projectId: string
+): Promise<{ skills: { name: string; description: string; enabled: boolean }[]; all_enabled: boolean; enabled_count: number; total_count: number }> {
+  return request(`/projects/${projectId}/skills/available`);
+}
+
+export async function updateEnabledSkills(
+  projectId: string,
+  enabledSkills: string[] | null
+): Promise<void> {
+  await request(`/projects/${projectId}/skills/enabled`, {
+    method: 'PUT',
+    body: { enabled_skills: enabledSkills },
+  });
 }
 
 export async function reloadProjectSkills(projectId: string): Promise<void> {
