@@ -108,6 +108,7 @@ export default function ProjectPage() {
   const [defaultCatalog, setDefaultCatalog] = useState<string>('ai_dev_kit');
   const [defaultSchema, setDefaultSchema] = useState<string>('');
   const [workspaceFolder, setWorkspaceFolder] = useState<string>('');
+  const [mlflowExperimentName, setMlflowExperimentName] = useState<string>('');
   const [skillsExplorerOpen, setSkillsExplorerOpen] = useState(false);
   const [activeExecutionId, setActiveExecutionId] = useState<string | null>(null);
   const [isReconnecting, setIsReconnecting] = useState(false);
@@ -440,6 +441,7 @@ export default function ProjectPage() {
         defaultSchema,
         warehouseId: selectedWarehouseId,
         workspaceFolder,
+        mlflowExperimentName: mlflowExperimentName || null,
         signal: abortControllerRef.current.signal,
         onEvent: (event) => {
           const type = event.type as string;
@@ -597,7 +599,7 @@ export default function ProjectPage() {
       });
       setIsStreaming(false);
     }
-  }, [projectId, input, isStreaming, currentConversation?.id, selectedClusterId, defaultCatalog, defaultSchema, selectedWarehouseId, workspaceFolder]);
+  }, [projectId, input, isStreaming, currentConversation?.id, selectedClusterId, defaultCatalog, defaultSchema, selectedWarehouseId, workspaceFolder, mlflowExperimentName]);
 
   // Handle keyboard submit
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -639,13 +641,13 @@ export default function ProjectPage() {
       <div className="flex flex-1 flex-col h-full">
         {/* Chat Header - always show configuration controls */}
         <div className="flex h-14 items-center justify-between border-b border-[var(--color-border)] px-6 bg-[var(--color-bg-secondary)]/50">
-          <h2 className="font-medium text-[var(--color-text-heading)] truncate max-w-[150px]">
+          <h2 className="font-medium text-[var(--color-text-heading)] truncate max-w-[150px] flex-shrink-0">
             {currentConversation?.title || 'New Chat'}
           </h2>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-1 min-w-0 justify-end">
               {/* Catalog.Schema Input */}
-              <div className="flex items-center h-8 rounded-md border border-[var(--color-border)] bg-[var(--color-background)] focus-within:ring-2 focus-within:ring-[var(--color-accent-primary)]/50">
-                <div className="flex items-center justify-center w-8 h-full border-r border-[var(--color-border)] bg-[var(--color-bg-secondary)]/50 rounded-l-md">
+              <div className="flex items-center h-8 w-[200px] flex-shrink-0 rounded-md border border-[var(--color-border)] bg-[var(--color-background)] focus-within:ring-2 focus-within:ring-[var(--color-accent-primary)]/50">
+                <div className="flex items-center justify-center w-8 h-full border-r border-[var(--color-border)] bg-[var(--color-bg-secondary)]/50 rounded-l-md flex-shrink-0">
                   <svg className="w-4 h-4 text-[var(--color-text-muted)]" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path fill="currentColor" fillRule="evenodd" d="M8.646.368a.75.75 0 0 0-1.292 0l-3.25 5.5A.75.75 0 0 0 4.75 7h6.5a.75.75 0 0 0 .646-1.132zM8 2.224 9.936 5.5H6.064zM8.5 9.25a.75.75 0 0 1 .75-.75h5a.75.75 0 0 1 .75.75v5a.75.75 0 0 1-.75.75h-5a.75.75 0 0 1-.75-.75zM10 10v3.5h3.5V10zM1 11.75a3.25 3.25 0 1 1 6.5 0 3.25 3.25 0 0 1-6.5 0M4.25 10a1.75 1.75 0 1 0 0 3.5 1.75 1.75 0 0 0 0-3.5" clipRule="evenodd" />
                   </svg>
@@ -655,15 +657,17 @@ export default function ProjectPage() {
                   value={defaultCatalog}
                   onChange={(e) => setDefaultCatalog(e.target.value)}
                   placeholder="catalog"
-                  className="h-full w-20 px-2 bg-transparent text-xs text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none"
+                  className="h-full w-[70px] flex-shrink-0 px-2 bg-transparent text-xs text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none overflow-hidden text-ellipsis"
+                  title={defaultCatalog || 'Default catalog'}
                 />
-                <span className="text-[var(--color-text-muted)] text-xs">.</span>
+                <span className="text-[var(--color-text-muted)] text-xs flex-shrink-0">.</span>
                 <input
                   type="text"
                   value={defaultSchema}
                   onChange={(e) => setDefaultSchema(e.target.value)}
                   placeholder="schema"
-                  className="h-full w-32 px-2 bg-transparent text-xs text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none"
+                  className="h-full w-[90px] flex-shrink-0 px-2 bg-transparent text-xs text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none overflow-hidden text-ellipsis"
+                  title={defaultSchema || 'Default schema'}
                 />
               </div>
               {/* Open Catalog Button */}
@@ -672,7 +676,7 @@ export default function ProjectPage() {
                   href={`${workspaceUrl}/explore/data/${defaultCatalog}/${defaultSchema}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-center h-8 w-8 rounded-md border border-[var(--color-border)] bg-[var(--color-background)] text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-primary)]/50 transition-colors"
+                  className="flex items-center justify-center h-8 w-8 flex-shrink-0 rounded-md border border-[var(--color-border)] bg-[var(--color-background)] text-[var(--color-text-muted)] hover:bg-[var(--color-bg-secondary)] hover:text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-primary)]/50 transition-colors"
                   title="Open in Catalog Explorer"
                 >
                   <ExternalLink className="h-4 w-4" />
@@ -795,8 +799,8 @@ export default function ProjectPage() {
               </div>
               )}
               {/* Workspace Folder Input */}
-              <div className="flex items-center h-8 rounded-md border border-[var(--color-border)] bg-[var(--color-background)] focus-within:ring-2 focus-within:ring-[var(--color-accent-primary)]/50">
-                <div className="flex items-center justify-center w-8 h-full border-r border-[var(--color-border)] bg-[var(--color-bg-secondary)]/50 rounded-l-md">
+              <div className="flex items-center h-8 w-[280px] flex-shrink-0 rounded-md border border-[var(--color-border)] bg-[var(--color-background)] focus-within:ring-2 focus-within:ring-[var(--color-accent-primary)]/50">
+                <div className="flex items-center justify-center w-8 h-full border-r border-[var(--color-border)] bg-[var(--color-bg-secondary)]/50 rounded-l-md flex-shrink-0">
                   <svg className="w-4 h-4 text-[var(--color-text-muted)]" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path fill="currentColor" fillRule="evenodd" d="M3 1.75A.75.75 0 0 1 3.75 1h10.5a.75.75 0 0 1 .75.75v12.5a.75.75 0 0 1-.75.75H3.75a.75.75 0 0 1-.75-.75V12.5H1V11h2V8.75H1v-1.5h2V5H1V3.5h2zm1.5.75v11H6v-11zm3 0v11h6v-11z" clipRule="evenodd" />
                   </svg>
@@ -806,8 +810,24 @@ export default function ProjectPage() {
                   value={workspaceFolder}
                   onChange={(e) => setWorkspaceFolder(e.target.value)}
                   placeholder="/Workspace/Users/..."
-                  className="h-full w-[500px] px-2 bg-transparent text-xs text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none"
-                  title="Workspace working folder for uploading files and pipelines"
+                  className="h-full w-[240px] flex-shrink-0 px-2 bg-transparent text-xs text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none overflow-hidden text-ellipsis"
+                  title={workspaceFolder || 'Workspace working folder for uploading files and pipelines'}
+                />
+              </div>
+              {/* MLflow Experiment Input */}
+              <div className="flex items-center h-8 w-[280px] flex-shrink-0 rounded-md border border-[var(--color-border)] bg-[var(--color-background)] focus-within:ring-2 focus-within:ring-[var(--color-accent-primary)]/50">
+                <div className="flex items-center justify-center w-8 h-full border-r border-[var(--color-border)] bg-[var(--color-bg-secondary)]/50 rounded-l-md flex-shrink-0">
+                  <svg className="w-4 h-4 text-[var(--color-text-muted)]" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path fill="currentColor" d="M8 1a.75.75 0 0 1 .75.75v2.5a.75.75 0 0 1-1.5 0v-2.5A.75.75 0 0 1 8 1M3.343 3.343a.75.75 0 0 1 1.061 0l1.768 1.768a.75.75 0 1 1-1.061 1.06L3.343 4.404a.75.75 0 0 1 0-1.06M1 8a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5A.75.75 0 0 1 1 8m2.343 4.657a.75.75 0 0 1 0-1.06l1.768-1.768a.75.75 0 1 1 1.06 1.06l-1.767 1.768a.75.75 0 0 1-1.061 0M8 11a.75.75 0 0 1 .75.75v2.5a.75.75 0 0 1-1.5 0v-2.5A.75.75 0 0 1 8 11m4.657-2.343a.75.75 0 0 1 0 1.06l-1.768 1.768a.75.75 0 0 1-1.06-1.06l1.767-1.768a.75.75 0 0 1 1.061 0M11 8a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5A.75.75 0 0 1 11 8m.829-4.657a.75.75 0 0 1 0 1.06L10.06 6.172a.75.75 0 1 1-1.06-1.061l1.768-1.768a.75.75 0 0 1 1.06 0" />
+                  </svg>
+                </div>
+                <input
+                  type="text"
+                  value={mlflowExperimentName}
+                  onChange={(e) => setMlflowExperimentName(e.target.value)}
+                  placeholder="MLflow Experiment ID or Name"
+                  className="h-full w-[240px] flex-shrink-0 px-2 bg-transparent text-xs text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none overflow-hidden text-ellipsis"
+                  title={mlflowExperimentName || 'MLflow experiment ID (e.g. 2452310130108632) or name (e.g. /Users/you@company.com/traces)'}
                 />
               </div>
           </div>

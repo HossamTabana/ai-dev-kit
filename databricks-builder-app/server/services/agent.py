@@ -140,8 +140,13 @@ def _get_mlflow_stop_hook(experiment_name: str | None = None):
     mlflow.set_tracking_uri('databricks')
     if experiment_name:
       try:
-        mlflow.set_experiment(experiment_name)
-        logger.info(f'MLflow experiment set to: {experiment_name}')
+        # Support both experiment IDs (numeric) and experiment names (paths)
+        if experiment_name.isdigit():
+          mlflow.set_experiment(experiment_id=experiment_name)
+          logger.info(f'MLflow experiment set by ID: {experiment_name}')
+        else:
+          mlflow.set_experiment(experiment_name)
+          logger.info(f'MLflow experiment set to: {experiment_name}')
       except Exception as e:
         logger.warning(f'Could not set MLflow experiment: {e}')
 
@@ -307,6 +312,7 @@ async def stream_agent_response(
   databricks_token: str | None = None,
   is_cancelled_fn: callable = None,
   enabled_skills: list[str] | None = None,
+  mlflow_experiment_name: str | None = None,
 ) -> AsyncIterator[dict]:
   """Stream Claude agent response with all event types.
 
@@ -445,8 +451,8 @@ async def stream_agent_response(
     # Default to always-false if no cancellation function provided
     cancel_check = is_cancelled_fn if is_cancelled_fn else lambda: False
 
-    # Get MLflow experiment name from environment
-    mlflow_experiment = os.environ.get('MLFLOW_EXPERIMENT_NAME')
+    # Get MLflow experiment name from request param, falling back to environment
+    mlflow_experiment = mlflow_experiment_name or os.environ.get('MLFLOW_EXPERIMENT_NAME')
 
     agent_thread = threading.Thread(
       target=_run_agent_in_fresh_loop,

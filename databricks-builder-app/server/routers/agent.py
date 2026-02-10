@@ -48,6 +48,7 @@ class InvokeAgentRequest(BaseModel):
     default_schema: Optional[str] = None  # Default schema
     warehouse_id: Optional[str] = None  # Databricks SQL warehouse for queries
     workspace_folder: Optional[str] = None  # Workspace folder for file uploads
+    mlflow_experiment_name: Optional[str] = None  # MLflow experiment name for tracing
 
 
 class InvokeAgentResponse(BaseModel):
@@ -172,6 +173,7 @@ async def invoke_agent(request: Request, body: InvokeAgentRequest):
                 databricks_token=user_token,
                 is_cancelled_fn=lambda: stream.is_cancelled,
                 enabled_skills=enabled_skills,
+                mlflow_experiment_name=body.mlflow_experiment_name,
             ):
                 # Check if cancelled (also checked in agent thread, but double-check here)
                 if stream.is_cancelled:
