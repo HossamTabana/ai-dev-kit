@@ -96,7 +96,6 @@ def _build_yaml_block(
 
   return '\n'.join(lines)
 
-
 def _render_joins(lines: List[str], joins: List[Dict[str, Any]], indent: int) -> None:
   """Recursively render join definitions into YAML lines."""
   prefix = ' ' * indent
